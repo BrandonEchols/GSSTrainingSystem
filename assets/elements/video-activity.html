@@ -1,0 +1,61 @@
+<link rel="import" href="/bower_components/polymer/polymer.html">
+
+<dom-module id="video-activity-styles"></dom-module>
+
+<dom-module id="video-activity">
+
+  <template>
+    <style include="video-activity-styles"></style>
+
+    <style>
+      .border {
+        border: 3px solid red;
+      }
+    </style>
+
+    <div class="border">
+      <div class="video-content">Video Content Goes Here</div>
+      <div class="control-content">Control Content Goes Here</div>
+    </div>
+  </template>
+
+  <script>
+
+    // Extend Polymer.Element base class
+    class VideoActivity extends Polymer.Element {
+
+      static get is() {
+        return 'video-activity';
+      }
+
+      static get properties() {
+        return {
+          "src": {
+            type: String,
+            value: "",
+            observer: '_srcObserver'
+          },
+          "autostart": {
+            type: Boolean,
+            value: false
+          },
+          "autoadvance": {
+            type: Boolean,
+            value: false
+          }
+        }
+      }
+
+      _srcObserver(newValue) {
+        console.log("LOOK: src newValue=", newValue);
+      }
+
+    } // class BaseElement
+
+    // Register custom element definition using standard platform API
+    customElements.define(VideoActivity.is, VideoActivity);
+
+  </script>
+
+</dom-module>
+
