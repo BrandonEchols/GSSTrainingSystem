@@ -18,3 +18,4 @@ Once you have Golang setup locally, clone this repository into your GOPATH, and 
 
 ##Golang Dependencies
 This project uses Glide to manage dependencies for go. See https://glide.sh/ for more information.
+Once Glide has been installed, run `glide install` to retrieve packages for compiling.
