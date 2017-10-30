@@ -15,3 +15,6 @@ To re-compile the server, you'll need to have a golang environment setup.
 Once you have Golang setup locally, clone this repository into your GOPATH, and run 
 `go run main.go` This will compile and run the server. If you just want to rebuild the executable, run 
 `go build -o server`
+
+##Golang Dependencies
+This project uses Glide to manage dependencies for go. See https://glide.sh/ for more information.
