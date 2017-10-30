@@ -18,7 +18,7 @@ func main() {
 
 	router.Methods("POST").PathPrefix("/courses/").HandlerFunc(course_controller.PostPage)
 	router.Methods("GET").PathPrefix("/courses/").HandlerFunc(course_controller.GetPage)
-	router.PathPrefix("/public/").Handler(http.FileServer(http.Dir("/public")))
+	router.PathPrefix("/assets").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))))
 
 	fmt.Println("Server listening on port 8080")
 	http.ListenAndServe(":8080", router)
