@@ -1,0 +1,89 @@
+swagger: "2.0"
+info:
+  description: "The webserver API Documentation for GSSTrainingSystem."
+  version: "1.0.0"
+  title: "GSSTrainingSystem Swagger"
+tags:
+- name: "Courses"
+  description: "Everything Course related"
+- name: "Admin"
+  description: "Future Endpoints for administrator use"
+- name: "Public"
+  description: "Endpoints for public use"
+schemes:
+- "http"
+paths:
+  /public/{fileName}:
+    get:
+      tags:
+      - "Public"
+      summary: "Static file server"
+      description: "Serves periphreal files for page use"
+      parameters:
+      - name: "fileName"
+        in: "path"
+        description: "The name of the file to return"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "File returned"
+        404:
+          description: "Not found"
+  /course/{courseName}:
+    get:
+      tags:
+      - "Courses"
+      summary: "Get a Course"
+      description: "Returns the first activity in a course"
+      operationId: "getPetById"
+      produces:
+      - "text/html"
+      parameters:
+      - name: "courseName"
+        in: "path"
+        description: "Name of Course to return"
+        required: true
+        type: "string"
+      - name: "activityNumber"
+        in: "query"
+        description: "Activity Number within the course to return"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "Page Returned"
+        400:
+          description: "Invalid ActivityNumber supplied"
+        404:
+          description: "Course/Activity not found"
+        500:
+          description: "Internal Server Error"
+    post:
+      tags:
+      - "Courses"
+      summary: "Validate activity answers, and get next activity"
+      description: "Checks the posted data against the activity requirements, if valid, redirects to the next activity."
+      consumes:
+      - "application/json"
+      parameters:
+      - name: "courseName"
+        in: "path"
+        description: "ID of pet that needs to be updated"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "activityNumber"
+        in: "query"
+        description: "Activity Number within the course to validate against"
+        required: false
+        type: "string"
+      responses:
+        302:
+          description: "Redirected to next activity"
+        400:
+          description: "Invalid data provided"
+        404:
+          description: "Course/Activity not found"
+        500:
+          description: "Internal Server Error"
