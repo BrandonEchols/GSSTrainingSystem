@@ -1,0 +1,3 @@
+package: GSSTrainingSystem
+import:
+- package: github.com/gorilla/mux
