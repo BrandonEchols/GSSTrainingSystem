@@ -1,5 +1,7 @@
 # GSSTrainingSystem
 This is a light weight LMS that serves 'courses' for training purposes
+See https://docs.google.com/document/d/1sgXLxdWy_UqgzeasflO0DO4EJP8TbL-zv6Hsd_NRdps/edit
+for design notes.
 
 ## Installing assets
 To install the assets and dependencies, from the 'assets' directory run:
