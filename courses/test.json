@@ -1,0 +1,13 @@
+{
+  "courseName" : "test",
+  "activities" : [
+    {
+      "type": "Static",
+      "url": "/html/courses/test.html"
+    },
+    {
+      "type": "Static",
+      "url": "/html/courses/testend.html"
+    }
+  ]
+}
