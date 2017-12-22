@@ -4,7 +4,7 @@ import (
 	"GSSTrainingSystem/models"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
+	"errors"
 	"io/ioutil"
 	"os"
 	"strconv"

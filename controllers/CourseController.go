@@ -105,7 +105,7 @@ func (this CourseController) GetPage(w http.ResponseWriter, r *http.Request) {
 
 	switch asserted_data := activity.(type) {
 	case *models.StaticActivity:
-		http.Redirect(w, r, "/assets/"+asserted_data.HtmlPath, 302)
+		http.Redirect(w, r, asserted_data.HtmlPath, 302)
 		return
 	}
 
