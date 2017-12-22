@@ -13,6 +13,6 @@ func (this controller) WriteErrorMessageWithStatus(w http.ResponseWriter, code i
 	}
 
 	marshaled_data, _ := json.Marshal(payload)
-	w.Write(marshaled_data)
 	w.WriteHeader(code)
+	w.Write(marshaled_data)
 }

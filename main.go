@@ -12,7 +12,6 @@ func main() {
 	router := mux.NewRouter()
 
 	course_service := services.GetCourseService()
-	course_service.ReadInCourses()
 
 	course_controller := controllers.GetCourseController(course_service)
 
