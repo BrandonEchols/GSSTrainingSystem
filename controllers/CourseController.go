@@ -3,6 +3,7 @@ package controllers
 import (
 	"GSSTrainingSystem/models"
 	"GSSTrainingSystem/services"
+	"bytes"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -25,13 +26,7 @@ func GetCourseController(course_service services.CourseService) CourseController
 	}
 }
 
-const GET_PAGE_TEMPLATE string = "%s?activity=%s"
-
-type LayoutPage struct {
-	Title        string
-	ActivityHead template.HTML
-	ActivityBody template.HTML
-}
+const GET_PAGE_TEMPLATE string = "%s?activity=%d"
 
 /*
 	POST -> /courses/<course_name>?activity=<activity_number>
@@ -69,13 +64,22 @@ func (this CourseController) PostPage(w http.ResponseWriter, r *http.Request) {
 	//TODO check the posted request against the activity returned
 
 	activity_num++ //increment to next page
-	nextPageNum := strconv.Itoa(activity_num)
 
 	fmt.Println("Redirecting to next page...")
 
 	r.Method = "GET"
-	new_url := fmt.Sprintf(GET_PAGE_TEMPLATE, strings.Split(r.URL.Path, "?")[0], nextPageNum)
+	new_url := fmt.Sprintf(GET_PAGE_TEMPLATE, strings.Split(r.URL.Path, "?")[0], activity_num)
 	http.Redirect(w, r, new_url, 302)
+}
+
+type LayoutTemplateData struct {
+	Title        string
+	ActivityHead template.HTML
+	ActivityBody template.HTML
+}
+
+type VideoBodyTemplateData struct {
+	Url template.URL
 }
 
 /*
@@ -96,7 +100,8 @@ func (this CourseController) GetPage(w http.ResponseWriter, r *http.Request) {
 
 	activity_string := r.URL.Query().Get("activity")
 	if activity_string == "" {
-		this.WriteErrorMessageWithStatus(w, 400, "Missing 'activity' query parameter")
+		new_url := fmt.Sprintf(GET_PAGE_TEMPLATE, r.URL.Path, 0)
+		http.Redirect(w, r, new_url, 302)
 		return
 	}
 
@@ -112,7 +117,7 @@ func (this CourseController) GetPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	layout_data := LayoutPage{
+	layout_data := LayoutTemplateData{
 		Title: course.Title,
 	}
 
@@ -139,11 +144,64 @@ func (this CourseController) GetPage(w http.ResponseWriter, r *http.Request) {
 		layout_data.ActivityHead = template.HTML(head_bytes)
 
 	case *models.VideoActivity:
-		//TODO do something
-		return
+		body_path := "templates/video-activity.html"
+		head_path := "templates/video-activity-head.html"
+		video_body_data := VideoBodyTemplateData{
+			Url: template.URL(asserted_data.VideoUrl),
+		}
+
+		buf := new(bytes.Buffer)
+		var body_t *template.Template
+		body_t = template.Must(body_t.ParseFiles(body_path))
+		err = body_t.Execute(buf, video_body_data)
+		if err != nil {
+			fmt.Printf("Unable to parse %s file. Err: %s", body_path, err.Error())
+			this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
+			return
+		}
+		layout_data.ActivityBody = template.HTML(buf.String())
+
+		buf = new(bytes.Buffer)
+		var head_t *template.Template
+		head_t = template.Must(head_t.ParseFiles(head_path))
+		err = head_t.Execute(buf, nil)
+		if err != nil {
+			fmt.Printf("Unable to parse %s file. Err: %s", head_path, err.Error())
+			this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
+			return
+		}
+		layout_data.ActivityHead = template.HTML(buf.String())
+
 	case *models.MultipleChoiceActivity:
-		//TODO do something
-		return
+
+		//TODO Once Multi-Choice has been implemented, implement this VV
+
+		/*
+			head_path := "templates/video-activity-head.html"
+			body_path := "templates/video-activity.html"
+
+			buf := new(bytes.Buffer)
+			var body_t *template.Template
+			body_t = template.Must(body_t.ParseFiles(body_path))
+			err = body_t.Execute(buf, video_body_data)
+			if err != nil {
+				fmt.Printf("Unable to parse %s file. Err: %s", body_path, err.Error())
+				this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
+				return
+			}
+			layout_data.ActivityBody = template.HTML(buf.String())
+
+			buf = new(bytes.Buffer)
+			var head_t *template.Template
+			head_t = template.Must(head_t.ParseFiles(head_path))
+			err = head_t.Execute(buf, nil)
+			if err != nil {
+				fmt.Printf("Unable to parse %s file. Err: %s", head_path, err.Error())
+				this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
+				return
+			}
+			layout_data.ActivityHead = template.HTML(buf.String())
+		*/
 	default:
 		fmt.Println("Unknown activity returned from Course Service")
 		this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
@@ -152,7 +210,6 @@ func (this CourseController) GetPage(w http.ResponseWriter, r *http.Request) {
 
 	var t *template.Template
 	t = template.Must(t.ParseFiles("templates" + course.Layout))
-	t.Option()
 	err = t.Execute(w, layout_data)
 	if err != nil {
 		fmt.Println("Unable to parse layout file. Err: ", err.Error())
