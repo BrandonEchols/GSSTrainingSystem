@@ -5,20 +5,32 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/global.css">
+
     <link rel="stylesheet" href="/css/covington.css">
 
+    <link rel="shortcut icon" type="image/jpg" href="/images/covington-icon.jpg" />
+
     <title>{{.Title}}</title>
+
     {{.ActivityHead}}
+
   </head>
   <body>
-    <header>
-      <img src="/images/covington-icon.jpg" alt="Covington Logo" class="header-icon">
+    <header class="page-header container-fluid">
+      <div class="row">
+        <a class="pull-left" href="http://covingtonassistedliving.com/"><img src="/images/covington-icon.jpg" alt="Covington Logo" class="header-icon"></a>
+        <h3 class="text-center">Covington Training System</h3>
+      </div>
     </header>
+
     {{.ActivityBody}}
 
-    <footer>
-
+    <footer class="container-fluid">
+      <hr/>
+      <small class="col-md-12 text-center">Copyright 2017 - Granite Software Solutions</small>
     </footer>
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   </body>

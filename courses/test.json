@@ -8,6 +8,10 @@
       "url": "/html/courses/test/start.html"
     },
     {
+      "type": "Video",
+      "url": "https://youtu.be/l2sd5XO4sVU"
+    },
+    {
       "type": "Static",
       "url": "/html/courses/test/end.html"
     }
