@@ -1,0 +1,25 @@
+{
+  "courseName" : "WelcometoCovington",
+  "activities" : [
+    {
+      "type": "Static",
+      "url": "frontpage.html"
+    },
+    {
+      "type": "Video",
+      "url": "somewhere.on.youtube"
+    },
+    {
+      "type": "MultipleChoice",
+      "question": "What is the airspeed velocity of a swallow?",
+      "answers": [
+        "500 bps",
+        "African or European",
+        "30 hertz"
+      ],
+      "correct": "African or European",
+      "correctFeedback": "good job",
+      "incorrectFeedback": "close, but no cigar"
+    }
+  ]
+}

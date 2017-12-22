@@ -1,11 +1,12 @@
 package controllers
 
 import (
+	"GSSTrainingSystem/models"
 	"GSSTrainingSystem/services"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 /*
@@ -30,8 +31,14 @@ func GetCourseController(course_service services.CourseService) CourseController
 	If the data passed in is invalid, a "400" error is returned with a message explaining the incorrect data.
 */
 func (this CourseController) PostPage(w http.ResponseWriter, r *http.Request) {
+	course_name := strings.TrimPrefix(r.URL.Path, "/courses/")
+	if course_name == "" {
+		this.WriteErrorMessageWithStatus(w, 400, "Unable to determine course name")
+		return
+	}
+
 	activity_string := r.URL.Query().Get("activity")
-	if activity_string != "" {
+	if activity_string == "" {
 		this.WriteErrorMessageWithStatus(w, 400, "Missing 'activity' query parameter")
 		return
 	}
@@ -42,7 +49,13 @@ func (this CourseController) PostPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _ = this.course_service.GetActivity(activity_num)
+	activity, act_err := this.course_service.GetCourseActivity(course_name, activity_num)
+	if act_err != nil {
+		fmt.Println("Error returned from GetCourseActivity. Err: ", act_err.Error())
+		this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
+		return
+	}
+	_ = activity.GetType()
 	//TODO check the posted request against the activity returned
 
 	activity_num++ //increment to next page
@@ -50,11 +63,14 @@ func (this CourseController) PostPage(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Redirecting to next page...")
 
-	http.Redirect(w, r, "/courses/"+nextPageNum, 302)
+	r.Method = "GET"
+	const GET_PAGE_TEMPLATE string = "/courses/%s?activity=%s"
+	new_url := fmt.Sprintf(GET_PAGE_TEMPLATE, strings.Split(r.URL.Path, "?")[0], nextPageNum)
+	http.Redirect(w, r, new_url, 302)
 }
 
 /*
-	GET -> /courses/<course_name>/<activity_number>
+	GET -> /courses/<course_name>?activity=<activity_number>
 	GetPage returns the standard page with the activity asked for in the URL path injected in it.
 	It reads the 'courses' directory looking for the <course_name>.json file. If no file exists, a 404 Not Found is
 	returned.
@@ -63,8 +79,14 @@ func (this CourseController) PostPage(w http.ResponseWriter, r *http.Request) {
 	If the activity exists, it determines what type of activity to inject into the page and returns it.
 */
 func (this CourseController) GetPage(w http.ResponseWriter, r *http.Request) {
+	course_name := strings.TrimPrefix(r.URL.Path, "/courses/")
+	if course_name == "" {
+		this.WriteErrorMessageWithStatus(w, 400, "Unable to determine course name")
+		return
+	}
+
 	activity_string := r.URL.Query().Get("activity")
-	if activity_string != "" {
+	if activity_string == "" {
 		this.WriteErrorMessageWithStatus(w, 400, "Missing 'activity' query parameter")
 		return
 	}
@@ -74,9 +96,19 @@ func (this CourseController) GetPage(w http.ResponseWriter, r *http.Request) {
 		this.WriteErrorMessageWithStatus(w, 400, "Invalid 'activity' query parameter")
 		return
 	}
-	_, _ = this.course_service.GetActivity(activity_num)
-	//TODO Inject the activity into the appropriate template to return
+	activity, act_err := this.course_service.GetCourseActivity(course_name, activity_num)
+	if act_err != nil {
+		fmt.Println("Error returned from GetCourseActivity. Err: ", act_err.Error())
+		this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
+		return
+	}
 
-	marshaled_data, _ := json.Marshal(activity_num)
-	w.Write(marshaled_data)
+	switch asserted_data := activity.(type) {
+	case *models.StaticActivity:
+		http.Redirect(w, r, "/assets/"+asserted_data.HtmlPath, 302)
+		return
+	}
+
+	fmt.Println("Unknown activity returned from Course Service")
+	this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
 }
