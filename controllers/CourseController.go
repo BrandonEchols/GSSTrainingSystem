@@ -4,6 +4,7 @@ import (
 	"GSSTrainingSystem/models"
 	"GSSTrainingSystem/services"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -22,6 +23,8 @@ func GetCourseController(course_service services.CourseService) CourseController
 		course_service: course_service,
 	}
 }
+
+const GET_PAGE_TEMPLATE string = "/courses/%s?activity=%s"
 
 /*
 	POST -> /courses/<course_name>?activity=<activity_number>
@@ -64,7 +67,6 @@ func (this CourseController) PostPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Redirecting to next page...")
 
 	r.Method = "GET"
-	const GET_PAGE_TEMPLATE string = "/courses/%s?activity=%s"
 	new_url := fmt.Sprintf(GET_PAGE_TEMPLATE, strings.Split(r.URL.Path, "?")[0], nextPageNum)
 	http.Redirect(w, r, new_url, 302)
 }
@@ -105,7 +107,16 @@ func (this CourseController) GetPage(w http.ResponseWriter, r *http.Request) {
 
 	switch asserted_data := activity.(type) {
 	case *models.StaticActivity:
-		http.Redirect(w, r, asserted_data.HtmlPath, 302)
+		filePath := "assets" + asserted_data.HtmlPath
+
+		data_bytes, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			fmt.Println("Could not read filepath: ", filePath)
+			this.WriteErrorMessageWithStatus(w, 400, "Could not read file "+filePath)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(data_bytes)
 		return
 	case *models.VideoActivity:
 		//TODO do something
