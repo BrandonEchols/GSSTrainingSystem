@@ -1,15 +1,15 @@
 {
   "courseName" : "test",
   "title": "Covington Test Course",
-  "layout": "/html/courses/CovingtonLayout.html",
+  "layout": "/layouts/Covington.html",
   "activities" : [
     {
       "type": "Static",
-      "url": "/html/courses/test.html"
+      "url": "/html/courses/test/start.html"
     },
     {
       "type": "Static",
-      "url": "/html/courses/testend.html"
+      "url": "/html/courses/test/end.html"
     }
   ]
 }
