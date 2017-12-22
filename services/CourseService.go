@@ -3,6 +3,7 @@ package services
 import (
 	"GSSTrainingSystem/models"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"errors"
 	"io/ioutil"
@@ -36,9 +37,18 @@ func (this CourseService) GetCourseActivity(course_name string, activity_number 
 	// Parse into Course Model
 	course := models.Course{}
 	err = json.Unmarshal(data_bytes, &course)
-	if err != nil {
+	if err != nil || len(course.Activities) < 1 {
 		return &models.Activity{}, errors.New("Could not parse json from file " + filePath + ". Err: " +
 			err.Error())
+	}
+
+	if len(course.Activities) < activity_number {
+		msg := fmt.Sprintf("Course %s only has %d activities, cannot get activity number %d",
+			course_name,
+			len(course.Activities),
+			activity_number,
+		)
+		return &models.Activity{}, errors.New(msg)
 	}
 
 	// Look for activity_number in that course
@@ -67,19 +77,50 @@ func (this CourseService) GetCourseActivity(course_name string, activity_number 
 		}
 		return &return_data, nil
 	case models.ACTIVITY_TYPE_VIDEO:
-		//TODO fix this VV
-		return_data, ok := activity_interface.(models.VideoActivity)
+		return_data := models.VideoActivity{}
+		return_data.VideoUrl, ok = activity_interface.(map[string]interface{})["url"].(string)
 		if !ok {
-			return &models.VideoActivity{}, errors.New("Unable to parse video activity." +
+			return &models.StaticActivity{}, errors.New("Unable to parse video activity." +
 				" Activity number " + activity_number_str + " in course " + filePath)
 		}
 		return &return_data, nil
 	case models.ACTIVITY_TYPE_MULT_CHOICE:
-		//TODO fix this VV
-		return_data, ok := activity_interface.(models.MultipleChoiceActivity)
+		msg := "Unable to parse MultipleChoice activity." +
+			" Activity number " + activity_number_str + " in course " + filePath + " bad field: "
+		return_data := models.MultipleChoiceActivity{}
+		activity, ok := activity_interface.(map[string]interface{})
 		if !ok {
-			return &models.MultipleChoiceActivity{}, errors.New("Unable to parse MultipleChoice activity." +
-				" Activity number " + activity_number_str + " in course " + filePath)
+			return &models.MultipleChoiceActivity{}, errors.New(msg + "activity")
+		}
+
+		return_data.Question, ok = activity["question"].(string)
+		if !ok {
+			return &models.MultipleChoiceActivity{}, errors.New(msg + "question")
+		}
+
+		answers, ok := activity["answers"].([]interface{})
+		if !ok {
+			return &models.MultipleChoiceActivity{}, errors.New(msg + "answers")
+		}
+		for _, answer := range answers { //Assert each answer is a string
+			a, ok := answer.(string)
+			if !ok {
+				return &models.MultipleChoiceActivity{}, errors.New(msg + "answers")
+			}
+			return_data.Answers = append(return_data.Answers, a)
+		}
+
+		return_data.CorrectAnswer, ok = activity["correct"].(string)
+		if !ok {
+			return &models.MultipleChoiceActivity{}, errors.New(msg + "correct")
+		}
+		return_data.GoodResponse, ok = activity["correctFeedback"].(string)
+		if !ok {
+			return &models.MultipleChoiceActivity{}, errors.New(msg + "correctFeedback")
+		}
+		return_data.BadResponse, ok = activity["incorrectFeedback"].(string)
+		if !ok {
+			return &models.MultipleChoiceActivity{}, errors.New(msg + "incorrectFeedback")
 		}
 		return &return_data, nil
 	default:
