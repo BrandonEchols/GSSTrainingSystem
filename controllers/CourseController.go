@@ -107,6 +107,12 @@ func (this CourseController) GetPage(w http.ResponseWriter, r *http.Request) {
 	case *models.StaticActivity:
 		http.Redirect(w, r, "/assets/"+asserted_data.HtmlPath, 302)
 		return
+	case *models.VideoActivity:
+		//TODO do something
+		return
+	case *models.MultipleChoiceActivity:
+		//TODO do something
+		return
 	}
 
 	fmt.Println("Unknown activity returned from Course Service")
