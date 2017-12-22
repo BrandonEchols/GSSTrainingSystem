@@ -1,4 +1,12 @@
 /* covington.css */
-.main {
-  margin: 10px;
+
+header {
+  border: darkgray 1px solid;
+  border-radius: 4px;
+}
+
+.header-icon {
+  max-height: 50px;
+  width: auto;
+  padding: 2px;
 }
