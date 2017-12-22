@@ -3,7 +3,7 @@
   "activities" : [
     {
       "type": "Static",
-      "url": "frontpage.html"
+      "url": "/frontpage.html"
     },
     {
       "type": "Video",
