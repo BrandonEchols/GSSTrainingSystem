@@ -17,27 +17,27 @@ func GetCourseService() CourseService {
 	return CourseService{}
 }
 
-func (this CourseService) GetCourseActivity(course_name string, activity_number int) (models.IActivity, error) {
+func (this CourseService) GetCourseAndActivity(course_name string, activity_number int) (models.Course, models.IActivity, error) {
 	activity_number_str := strconv.Itoa(activity_number)
 	filePath := "courses/" + course_name + ".json"
 
 	// Look for course_name as a file in the courses dir.
 	fileInfo, err := os.Stat(filePath)
 	if err != nil || fileInfo.IsDir() {
-		return &models.Activity{}, errors.New("Could not open file " + filePath + " for reading. Err: " + err.Error())
+		return models.Course{}, &models.Activity{}, errors.New("Could not open file " + filePath + " for reading. Err: " + err.Error())
 	}
 
 	// Read in that file
 	data_bytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		return &models.Activity{}, errors.New("Could not read in file " + filePath + ". Err: " + err.Error())
+		return models.Course{}, &models.Activity{}, errors.New("Could not read in file " + filePath + ". Err: " + err.Error())
 	}
 
 	// Parse into Course Model
 	course := models.Course{}
 	err = json.Unmarshal(data_bytes, &course)
 	if err != nil || len(course.Activities) < 1 {
-		return &models.Activity{}, errors.New("Could not parse json from file " + filePath + ". Err: " +
+		return models.Course{}, &models.Activity{}, errors.New("Could not parse json from file " + filePath + ". Err: " +
 			err.Error())
 	}
 
@@ -47,13 +47,13 @@ func (this CourseService) GetCourseActivity(course_name string, activity_number 
 			len(course.Activities),
 			activity_number,
 		)
-		return &models.Activity{}, errors.New(msg)
+		return models.Course{}, &models.Activity{}, errors.New(msg)
 	}
 
 	// Look for activity_number in that course
 	activity_interface := course.Activities[activity_number]
 	if activity_interface == nil {
-		return &models.Activity{}, errors.New("Activity number " + activity_number_str +
+		return models.Course{}, &models.Activity{}, errors.New("Activity number " + activity_number_str +
 			" not found in course " + filePath)
 	}
 
@@ -61,7 +61,7 @@ func (this CourseService) GetCourseActivity(course_name string, activity_number 
 	data, _ := activity_interface.(map[string]interface{})
 	activity_type, ok := data["type"].(string)
 	if !ok {
-		return &models.Activity{}, errors.New("Could not assert type of activity. Activity number " +
+		return models.Course{}, &models.Activity{}, errors.New("Could not assert type of activity. Activity number " +
 			activity_number_str + " in course " + filePath)
 	}
 
@@ -71,63 +71,63 @@ func (this CourseService) GetCourseActivity(course_name string, activity_number 
 		return_data := models.StaticActivity{}
 		return_data.HtmlPath, ok = activity_interface.(map[string]interface{})["url"].(string)
 		if !ok {
-			return &models.StaticActivity{}, errors.New("Unable to parse static activity." +
+			return models.Course{}, &models.StaticActivity{}, errors.New("Unable to parse static activity." +
 				" Activity number " + activity_number_str + " in course " + filePath)
 		}
-		return &return_data, nil
+		return course, &return_data, nil
 	case models.ACTIVITY_TYPE_VIDEO:
 		return_data := models.VideoActivity{}
 		return_data.VideoUrl, ok = activity_interface.(map[string]interface{})["url"].(string)
 		if !ok {
-			return &models.StaticActivity{}, errors.New("Unable to parse video activity." +
+			return models.Course{}, &models.StaticActivity{}, errors.New("Unable to parse video activity." +
 				" Activity number " + activity_number_str + " in course " + filePath)
 		}
-		return &return_data, nil
+		return course, &return_data, nil
 	case models.ACTIVITY_TYPE_MULT_CHOICE:
 		msg := "Unable to parse MultipleChoice activity." +
 			" Activity number " + activity_number_str + " in course " + filePath + " bad field: "
 		return_data := models.MultipleChoiceActivity{}
 		activity, ok := activity_interface.(map[string]interface{})
 		if !ok {
-			return &models.MultipleChoiceActivity{}, errors.New(msg + "activity")
+			return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "activity")
 		}
 
 		return_data.Question, ok = activity["question"].(string)
 		if !ok {
-			return &models.MultipleChoiceActivity{}, errors.New(msg + "question")
+			return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "question")
 		}
 
 		answers, ok := activity["answers"].([]interface{})
 		if !ok {
-			return &models.MultipleChoiceActivity{}, errors.New(msg + "answers")
+			return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "answers")
 		}
 		for _, answer := range answers { //Assert each answer is a string
 			a, ok := answer.(string)
 			if !ok {
-				return &models.MultipleChoiceActivity{}, errors.New(msg + "answers")
+				return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "answers")
 			}
 			return_data.Answers = append(return_data.Answers, a)
 		}
 
 		return_data.CorrectAnswer, ok = activity["correct"].(string)
 		if !ok {
-			return &models.MultipleChoiceActivity{}, errors.New(msg + "correct")
+			return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "correct")
 		}
 		return_data.GoodResponse, ok = activity["correctFeedback"].(string)
 		if !ok {
-			return &models.MultipleChoiceActivity{}, errors.New(msg + "correctFeedback")
+			return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "correctFeedback")
 		}
 		return_data.BadResponse, ok = activity["incorrectFeedback"].(string)
 		if !ok {
-			return &models.MultipleChoiceActivity{}, errors.New(msg + "incorrectFeedback")
+			return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "incorrectFeedback")
 		}
-		return &return_data, nil
+		return course, &return_data, nil
 	default:
 		msg := fmt.Sprintf("Unknown type of activity. Type %v Activity number %s in couse %s",
 			data,
 			activity_number_str,
 			filePath,
 		)
-		return &models.Activity{}, errors.New(msg)
+		return models.Course{}, &models.Activity{}, errors.New(msg)
 	}
 }

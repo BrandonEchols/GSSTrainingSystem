@@ -4,6 +4,7 @@ import (
 	"GSSTrainingSystem/models"
 	"GSSTrainingSystem/services"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -25,6 +26,12 @@ func GetCourseController(course_service services.CourseService) CourseController
 }
 
 const GET_PAGE_TEMPLATE string = "/courses/%s?activity=%s"
+
+type LayoutPage struct {
+	Title        string
+	ActivityHead template.HTML
+	ActivityBody template.HTML
+}
 
 /*
 	POST -> /courses/<course_name>?activity=<activity_number>
@@ -52,7 +59,7 @@ func (this CourseController) PostPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	activity, act_err := this.course_service.GetCourseActivity(course_name, activity_num)
+	_, activity, act_err := this.course_service.GetCourseAndActivity(course_name, activity_num)
 	if act_err != nil {
 		fmt.Println("Error returned from GetCourseActivity. Err: ", act_err.Error())
 		this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
@@ -98,34 +105,58 @@ func (this CourseController) GetPage(w http.ResponseWriter, r *http.Request) {
 		this.WriteErrorMessageWithStatus(w, 400, "Invalid 'activity' query parameter")
 		return
 	}
-	activity, act_err := this.course_service.GetCourseActivity(course_name, activity_num)
+	course, activity, act_err := this.course_service.GetCourseAndActivity(course_name, activity_num)
 	if act_err != nil {
 		fmt.Println("Error returned from GetCourseActivity. Err: ", act_err.Error())
 		this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
 		return
 	}
 
+	layout_data := LayoutPage{
+		Title: course.Title,
+	}
+
 	switch asserted_data := activity.(type) {
 	case *models.StaticActivity:
-		filePath := "assets" + asserted_data.HtmlPath
+		bodyPath := "assets" + asserted_data.HtmlPath
+		headPath := strings.TrimSuffix(bodyPath, ".html") + "-head.html"
 
-		data_bytes, err := ioutil.ReadFile(filePath)
+		body_bytes, err := ioutil.ReadFile(bodyPath)
 		if err != nil {
-			fmt.Println("Could not read filepath: ", filePath)
-			this.WriteErrorMessageWithStatus(w, 400, "Could not read file "+filePath)
+			fmt.Println("Could not read filepath: ", bodyPath)
+			this.WriteErrorMessageWithStatus(w, 500, "Could not read file "+bodyPath)
 			return
 		}
-		w.Header().Set("Content-Type", "text/html")
-		w.Write(data_bytes)
-		return
+
+		head_bytes, err := ioutil.ReadFile(headPath)
+		if err != nil {
+			fmt.Println("Could not read filepath: ", headPath)
+			this.WriteErrorMessageWithStatus(w, 500, "Could not read file "+headPath)
+			return
+		}
+
+		layout_data.ActivityBody = template.HTML(body_bytes)
+		layout_data.ActivityHead = template.HTML(head_bytes)
+
 	case *models.VideoActivity:
 		//TODO do something
 		return
 	case *models.MultipleChoiceActivity:
 		//TODO do something
 		return
+	default:
+		fmt.Println("Unknown activity returned from Course Service")
+		this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
+		return
 	}
 
-	fmt.Println("Unknown activity returned from Course Service")
-	this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
+	var t *template.Template
+	t = template.Must(t.ParseFiles("templates" + course.Layout))
+	t.Option()
+	err = t.Execute(w, layout_data)
+	if err != nil {
+		fmt.Println("Unable to parse layout file. Err: ", err.Error())
+		this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
+		return
+	}
 }
