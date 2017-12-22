@@ -25,7 +25,7 @@ func GetCourseController(course_service services.CourseService) CourseController
 	}
 }
 
-const GET_PAGE_TEMPLATE string = "/courses/%s?activity=%s"
+const GET_PAGE_TEMPLATE string = "%s?activity=%s"
 
 type LayoutPage struct {
 	Title        string
