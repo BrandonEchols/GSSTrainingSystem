@@ -2,6 +2,8 @@ package models
 
 type Course struct {
 	CourseName string        `json:"courseName"`
+	Title      string        `json:"title"`
+	Layout     string        `json:"layout"`
 	Activities []interface{} `json:"activities"`
 }
 
