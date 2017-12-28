@@ -12,6 +12,18 @@
       "url": "https://www.youtube.com/embed/l2sd5XO4sVU?rel=0"
     },
     {
+      "type": "MultipleChoice",
+      "question": "What is your favorite color",
+      "answers": {
+        "a": "Blue",
+        "b": "*Yellow*",
+        "c": "Green",
+        "d": "Olive drab"
+      },
+      "correct": ["b"],
+      "wrongtext": "Not quite, 'yellow' would be the correct answer"
+    },
+    {
       "type": "Static",
       "url": "/html/courses/test/end.html"
     }
