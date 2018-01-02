@@ -1,0 +1,61 @@
+<link rel="import" href="/bower_components/polymer/polymer.html">
+
+<dom-module id="multiple-choice-activity-styles"></dom-module>
+
+<dom-module id="multiple-choice-activity">
+
+  <template>
+    <style include="multiple-choice-activity-styles"></style>
+    <em>{{question}}</em>
+    <ul>
+      <template is="dom-repeat" items="[[answers]]" as="answer">
+        <li><input type="checkbox">[[answer]]</li>
+      </template>
+    </ul>
+    <div>Correct: [[correct]]</div>
+    <div>Wrongtext: [[wrongtext]]</div>
+  </template>
+
+  <script>
+
+    // Extend Polymer.Element base class
+    class MultipleChoiceActivity extends Polymer.Element {
+
+      static get is() {
+        return 'multiple-choice-activity';
+      }
+
+      static get properties() {
+        return {
+          "question": {
+            type: String,
+            value: ""
+          },
+          "answers": {
+            type: Array,
+            value: []
+          },
+          "correct": {
+            type: Array,
+            value: []
+          },
+          "wrongtext": {
+            type: String,
+            value: ""
+          }
+        }
+      }
+
+      _srcObserver(newValue) {
+        console.log("LOOK: src newValue=", newValue);
+      }
+
+    } // class BaseElement
+
+    // Register custom element definition using standard platform API
+    customElements.define(MultipleChoiceActivity.is, MultipleChoiceActivity);
+
+  </script>
+
+</dom-module>
+
