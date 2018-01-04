@@ -31,11 +31,10 @@ type StaticActivity struct {
 
 type MultipleChoiceActivity struct {
 	Activity
-	Question      string   `json:"question"`
-	Answers       []string `json:"answers"`
-	CorrectAnswer string   `json:"correct"`
-	BadResponse   string   `json:"correctFeedback"`
-	GoodResponse  string   `json:"incorrectFeedback"`
+	Question      string            `json:"question"`
+	Answers       map[string]string `json:"answers"`
+	CorrectAnswer []string          `json:"correct"`
+	WrongText     string            `json:"wrongtext"`
 }
 
 func (this Activity) GetType() string {

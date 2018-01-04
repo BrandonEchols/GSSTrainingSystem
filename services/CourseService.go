@@ -97,29 +97,34 @@ func (this CourseService) GetCourseAndActivity(course_name string, activity_numb
 			return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "question")
 		}
 
-		answers, ok := activity["answers"].([]interface{})
+		return_data.Answers = map[string]string{}
+		answers, ok := activity["answers"].(map[string]interface{})
 		if !ok {
 			return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "answers")
 		}
-		for _, answer := range answers { //Assert each answer is a string
+		for key, value := range answers { //Assert each answer is a string
+			a, ok := value.(string)
+			if !ok {
+				return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "answers")
+			}
+			return_data.Answers[key] = a
+		}
+
+		correct_answers, ok := activity["correct"].([]interface{})
+		if !ok {
+			return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "correct")
+		}
+		for _, answer := range correct_answers { //Assert each answer is a string
 			a, ok := answer.(string)
 			if !ok {
 				return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "answers")
 			}
-			return_data.Answers = append(return_data.Answers, a)
+			return_data.CorrectAnswer = append(return_data.CorrectAnswer, a)
 		}
 
-		return_data.CorrectAnswer, ok = activity["correct"].(string)
+		return_data.WrongText, ok = activity["wrongtext"].(string)
 		if !ok {
-			return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "correct")
-		}
-		return_data.GoodResponse, ok = activity["correctFeedback"].(string)
-		if !ok {
-			return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "correctFeedback")
-		}
-		return_data.BadResponse, ok = activity["incorrectFeedback"].(string)
-		if !ok {
-			return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "incorrectFeedback")
+			return models.Course{}, &models.MultipleChoiceActivity{}, errors.New(msg + "wrongtext")
 		}
 		return course, &return_data, nil
 	default:

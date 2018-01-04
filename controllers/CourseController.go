@@ -82,6 +82,13 @@ type VideoBodyTemplateData struct {
 	Url template.URL
 }
 
+type MultiChoiceBodyTemplateData struct {
+	Question  string
+	Answers   map[string]string
+	Correct   []string
+	Wrongtext string
+}
+
 /*
 	GET -> /courses/<course_name>?activity=<activity_number>
 	GetPage returns the standard page with the activity asked for in the URL path injected in it.
@@ -173,35 +180,37 @@ func (this CourseController) GetPage(w http.ResponseWriter, r *http.Request) {
 		layout_data.ActivityHead = template.HTML(buf.String())
 
 	case *models.MultipleChoiceActivity:
+		head_path := "templates/multiple-choice-activity-head.html"
+		body_path := "templates/multiple-choice-activity.html"
+		multiple_choice_body_data := MultiChoiceBodyTemplateData{
+			Question:  asserted_data.Question,
+			Answers:   asserted_data.Answers,
+			Correct:   asserted_data.CorrectAnswer,
+			Wrongtext: asserted_data.WrongText,
+		}
 
-		//TODO Once Multi-Choice has been implemented, implement this VV
+		buf := new(bytes.Buffer)
+		var body_t *template.Template
+		body_t = template.Must(body_t.ParseFiles(body_path))
+		err = body_t.Execute(buf, multiple_choice_body_data)
+		if err != nil {
+			fmt.Printf("Unable to parse %s file. Err: %s", body_path, err.Error())
+			this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
+			return
+		}
+		layout_data.ActivityBody = template.HTML(buf.String())
 
-		/*
-			head_path := "templates/video-activity-head.html"
-			body_path := "templates/video-activity.html"
+		buf = new(bytes.Buffer)
+		var head_t *template.Template
+		head_t = template.Must(head_t.ParseFiles(head_path))
+		err = head_t.Execute(buf, nil)
+		if err != nil {
+			fmt.Printf("Unable to parse %s file. Err: %s", head_path, err.Error())
+			this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
+			return
+		}
+		layout_data.ActivityHead = template.HTML(buf.String())
 
-			buf := new(bytes.Buffer)
-			var body_t *template.Template
-			body_t = template.Must(body_t.ParseFiles(body_path))
-			err = body_t.Execute(buf, video_body_data)
-			if err != nil {
-				fmt.Printf("Unable to parse %s file. Err: %s", body_path, err.Error())
-				this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
-				return
-			}
-			layout_data.ActivityBody = template.HTML(buf.String())
-
-			buf = new(bytes.Buffer)
-			var head_t *template.Template
-			head_t = template.Must(head_t.ParseFiles(head_path))
-			err = head_t.Execute(buf, nil)
-			if err != nil {
-				fmt.Printf("Unable to parse %s file. Err: %s", head_path, err.Error())
-				this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
-				return
-			}
-			layout_data.ActivityHead = template.HTML(buf.String())
-		*/
 	default:
 		fmt.Println("Unknown activity returned from Course Service")
 		this.WriteErrorMessageWithStatus(w, 500, "internal_server_error")
